@@ -1,8 +1,10 @@
 import os
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import (accuracy_score, precision_score, recall_score,
                              f1_score, roc_auc_score)
 from sklearn.linear_model import LogisticRegression
@@ -11,7 +13,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.dummy import DummyClassifier
 from xgboost import XGBClassifier
-from imblearn.over_sampling import SMOTE  
+from imblearn.over_sampling import SMOTE
+from imblearn.pipeline import Pipeline as ImbPipeline
 import joblib
 
 # 1. Charger les données
@@ -23,33 +26,19 @@ loan_df = pd.read_csv(loan_csv_path)
 X = loan_df.drop("Loan_Status", axis=1)
 y = loan_df["Loan_Status"]
 
-train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42, stratify=y
+# 2. Définir les features
+num_features = ["ApplicantIncome", "CoapplicantIncome", "LoanAmount_log", "InterestRate"]
+cat_features = ["Gender", "Married", "Dependents", "Education", "Self_Employed", "Property_Area"]
+
+# 3. Préprocesseur
+preprocessor = ColumnTransformer(
+    transformers=[
+        ("num", StandardScaler(), num_features),
+        ("cat", OneHotEncoder(drop="first", handle_unknown="ignore"), cat_features)
+    ]
 )
 
-# 2. Preprocessing
-num_features = ["ApplicantIncome", "CoapplicantIncome", "LoanAmount_log", "InterestRate"]
-cat_features = ["Gender", "Married","Dependents", "Education", "Self_Employed", "Property_Area"]
-
-encoder = OneHotEncoder(drop='first', handle_unknown='ignore')
-scaler = StandardScaler()
-
-X_train_cat = encoder.fit_transform(X_train[cat_features])
-X_test_cat = encoder.transform(X_test[cat_features])
-
-X_train_num = scaler.fit_transform(X_train[num_features])
-X_test_num = scaler.transform(X_test[num_features])
-
-X_train_final = np.hstack((X_train_num, X_train_cat.toarray()))
-X_test_final = np.hstack((X_test_num, X_test_cat.toarray()))
-
-# 2bis. Rééquilibrage avec SMOTE uniquement sur le train
-print("Avant SMOTE:", np.bincount(y_train))
-smote = SMOTE(random_state=42)
-X_train_final, y_train = smote.fit_resample(X_train_final, y_train)
-print("Après SMOTE:", np.bincount(y_train))
-
-# 3. Modèles à tester
+# 4. Définir les modèles
 models = {
     "Logistic Regression": LogisticRegression(max_iter=1000, random_state=42),
     "Random Forest": RandomForestClassifier(n_estimators=300, random_state=42, class_weight="balanced"),
@@ -64,34 +53,39 @@ models = {
     "Dummy": DummyClassifier(strategy="most_frequent", random_state=42)
 }
 
-# 4. Entraînement et comparaison
+# 5. Cross-validation + SMOTE
 results = {}
-for name, model in models.items():
-    model.fit(X_train_final, y_train)
-    y_pred = model.predict(X_test_final)
-    y_proba = model.predict_proba(X_test_final)[:,1] if hasattr(model, "predict_proba") else None
+cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
 
+for name, model in models.items():
+    # pipeline = SMOTE + preprocessor + model
+    clf = ImbPipeline(steps=[
+        ("preprocessor", preprocessor),
+        ("smote", SMOTE(random_state=42)),
+        ("model", model)
+    ])
+    
+    scores = cross_val_score(clf, X, y, cv=cv, scoring="f1")
     results[name] = {
-        "Accuracy": accuracy_score(y_test, y_pred),
-        "Precision": precision_score(y_test, y_pred, zero_division=0),
-        "Recall": recall_score(y_test, y_pred, zero_division=0),
-        "F1": f1_score(y_test, y_pred, zero_division=0),
-        "ROC-AUC": roc_auc_score(y_test, y_proba) if y_proba is not None else np.nan
+        "CV F1 mean": np.mean(scores),
+        "CV F1 std": np.std(scores)
     }
 
 results_df = pd.DataFrame(results).T
-print(results_df)
 
-# 5. Sélection du meilleur modèle (basé sur F1 puis ROC-AUC)
-sorted_df = results_df.sort_values("F1", ascending=False)
-best_model_name = sorted_df.index[0]
-best_model = models[best_model_name]
+# 6. Sélection du meilleur modèle
+best_model_name = results_df["CV F1 mean"].idxmax()
+print(f"\n✅ Meilleur modèle sélectionné : {best_model_name}")
 
-print(f" Meilleur modèle sélectionné : {best_model_name}")
+best_model = ImbPipeline(steps=[
+    ("preprocessor", preprocessor),
+    ("smote", SMOTE(random_state=42)),
+    ("model", models[best_model_name])
+])
 
-# 6. Sauvegarde
+best_model.fit(X, y)
+
+# 7. Sauvegarde du pipeline complet
 models_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
 os.makedirs(models_dir, exist_ok=True)
 joblib.dump(best_model, os.path.join(models_dir, "best_model.pkl"))
-joblib.dump(encoder, os.path.join(models_dir, "encoder.pkl"))
-joblib.dump(scaler, os.path.join(models_dir, "scaler.pkl"))
