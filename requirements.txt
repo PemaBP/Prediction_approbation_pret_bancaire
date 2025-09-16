@@ -3,9 +3,12 @@ numpy
 scikit-learn
 matplotlib
 seaborn
-streamlit
 joblib
 requests
 lxml
 pycaret
 xgboost
+fastapi
+uvicorn
+python-multipart
+openpyxl
