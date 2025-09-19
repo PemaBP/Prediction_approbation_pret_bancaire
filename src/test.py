@@ -32,7 +32,7 @@ test_clients = [
         "Property_Area": "Urban",
         "ApplicantIncome": 4000,
         "CoapplicantIncome": 1500,
-        "LoanAmount": 120
+        "LoanAmount": 120000
     },
     {
         "name": "Haut revenu - petit prêt",
