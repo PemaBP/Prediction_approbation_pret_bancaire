@@ -5,6 +5,8 @@ import {
   CartesianGrid, Legend
 } from "recharts";
 import AdminLogin from "../components/AdminLogin";
+import bannerImg from "../../images/pexels-artempodrez-5716052.jpg";
+import Image from "next/image";
 
 const COLORS = ["#10b981","#3b82f6","#f59e0b","#ef4444","#8b5cf6","#14b8a6","#6366f1"];
 
@@ -30,12 +32,21 @@ export default function AdminPage() {
   return (
     <main className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-6xl mx-auto space-y-10">
-        <h1 className="text-3xl font-bold">Dashboard Admin</h1>
+        {/* Image + intro */}
+        <div className="relative w-full h-72 md:h-96 rounded-2xl overflow-hidden shadow">
+          <Image src={bannerImg} alt="Analyses admin" fill className="object-cover" priority />
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <h1 className="text-3xl md:text-5xl font-extrabold text-white text-center max-w-3xl">
+              Dashboard Admin
+            </h1>
+          </div>
+        </div>
 
+        <div className="mt-10" /> {/* Ajoute un espace en haut */}
         {/* --- Section prédictions --- */}
         {stats && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold">📊 Statistiques des prédictions</h2>
+            <h2 className="text-2xl font-bold">Statistiques des prédictions</h2>
             <div className="grid md:grid-cols-3 gap-4">
               <Card title="Total prédictions" value={stats.total} />
               <Card title="Taux d’approbation" value={`${Math.round(stats.approved_rate*100)}%`} />
@@ -72,7 +83,7 @@ export default function AdminPage() {
         {/* --- Section feedback --- */}
         {feedback && feedback.total > 0 && (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold">🗣️ Feedback utilisateurs</h2>
+            <h2 className="text-2xl font-bold">Feedback utilisateurs</h2>
             <div className="flex justify-center gap-6">
               <div className="flex-1 max-w-xs">
                 <Card title="Total feedbacks" value={feedback.total} />
@@ -86,7 +97,7 @@ export default function AdminPage() {
               <ChartWrapper title="Situation professionnelle">
                 <PieChart width={520} height={260}>
                   <Pie data={Object.entries(feedback.jobSituation).map(([k,v])=>({name:k, value:v}))}
-                       dataKey="value" cx="50%" cy="50%" outerRadius={90}>
+                      dataKey="value" cx="50%" cy="50%" outerRadius={90}>
                     {Object.keys(feedback.jobSituation).map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]} />)}
                   </Pie>
                   <Tooltip />
@@ -117,7 +128,7 @@ export default function AdminPage() {
               <ChartWrapper title="Comment ont-ils connu le simulateur ?">
                 <PieChart width={520} height={260}>
                   <Pie data={Object.entries(feedback.discovery).map(([k,v])=>({name:k, value:v}))}
-                       dataKey="value" cx="50%" cy="50%" outerRadius={90}>
+                      dataKey="value" cx="50%" cy="50%" outerRadius={90}>
                     {Object.keys(feedback.discovery).map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]} />)}
                   </Pie>
                   <Tooltip />

@@ -126,9 +126,9 @@ export default function BankPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-1">Résultat</h3>
                 {resOne.prediction === 1 ? (
-                  <p className="text-emerald-600 font-semibold">✅ Prêt APPROUVÉ</p>
+                  <p className="text-emerald-600 font-semibold">Prêt APPROUVÉ</p>
                 ) : (
-                  <p className="text-rose-600 font-semibold">❌ Prêt REFUSÉ</p>
+                  <p className="text-rose-600 font-semibold">Prêt REFUSÉ</p>
                 )}
                 <p className="text-slate-600 mt-2 text-sm">Probabilité : {(resOne.probability*100).toFixed(2)}%</p>
               </div>
@@ -200,9 +200,9 @@ export default function BankPage() {
                 <Jauge value={Number(current.probability || 0)} />
                 <div>
                   {Number(current.prediction) === 1 ? (
-                    <p className="text-emerald-600 font-semibold text-lg">✅ Prêt APPROUVÉ</p>
+                    <p className="text-emerald-600 font-semibold text-lg">Prêt APPROUVÉ</p>
                   ) : (
-                    <p className="text-rose-600 font-semibold text-lg">❌ Prêt REFUSÉ</p>
+                    <p className="text-rose-600 font-semibold text-lg">Prêt REFUSÉ</p>
                   )}
                   <p className="text-slate-600 mt-2 text-sm">
                     Probabilité : {((Number(current.probability||0))*100).toFixed(2)}%

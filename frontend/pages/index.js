@@ -16,17 +16,17 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-center px-4">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white max-w-3xl">
-            Estimez vos chances d&apos;approbation pour un prêt immobilier
+            Estimez vos chances d&apos;approbation pour votre futur prêt immobilier
           </h1>
           <p className="mt-4 text-lg text-slate-200 max-w-2xl">
-            Un simulateur intelligent, rapide et gratuit pour particuliers et banques.
+            Un simulateur intelligent, rapide et gratuit pour les particuliers et les banques.
           </p>
           <div className="mt-6 flex gap-4">
             <Link
               href="/user"
               className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold transition"
             >
-              Tester maintenant
+              Tester votre éligibilité
             </Link>
             <Link
               href="/bank"
@@ -64,17 +64,17 @@ export default function Home() {
       <section className="py-16 bg-slate-100">
         <div className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-6">
           <Card
-            title="👤 Utilisateur"
+            title="Utilisateur"
             desc="Simulez vos chances et explorez différents scénarios."
             href="/user"
           />
           <Card
-            title="🏦 Banque"
+            title="Banque"
             desc="Analysez des dossiers individuellement ou par lot (CSV/XLSX)."
             href="/bank"
           />
           <Card
-            title="📊 Admin"
+            title="Admin"
             desc="Visualisez les statistiques globales et les feedbacks."
             href="/admin"
           />

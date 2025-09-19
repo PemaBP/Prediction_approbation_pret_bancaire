@@ -74,7 +74,7 @@ export default function UserPage() {
 
       <div className="text-center max-w-3xl mx-auto space-y-3">
         <p className="text-lg text-slate-700">
-          Découvrez vos chances d&apos;approbation de votre prêt immobilier grâce à notre intelligence artificielle.
+          Découvrez vos chances d&apos;approbation de votre prêt immobilier grâce à notre modèle d&apos;intelligence artificielle.
           Remplissez le formulaire ci-dessous pour obtenir une estimation personnalisée.
         </p>
       <div className="text-center max-w-3xl mx-auto">
@@ -134,9 +134,9 @@ export default function UserPage() {
           <Jauge value={resu.probability} />
           <h2 className="text-xl font-semibold mt-4">Résultat</h2>
           {resu.prediction === 1 ? (
-            <p className="text-emerald-600 font-semibold">✅ Votre prêt a de fortes chances d&apos;être approuvé</p>
+            <p className="text-emerald-600 font-semibold">Votre prêt a de fortes chances d&apos;être approuvé</p>
           ) : (
-            <p className="text-rose-600 font-semibold">❌ Votre prêt a peu de chances d&apos;être approuvé</p>
+            <p className="text-rose-600 font-semibold">Votre prêt a peu de chances d&apos;être approuvé</p>
           )}
           <p className="text-slate-600 mt-2 text-sm">
             Probabilité estimée : {(resu.probability*100).toFixed(2)}%
