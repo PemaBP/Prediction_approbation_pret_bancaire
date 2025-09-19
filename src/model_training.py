@@ -10,7 +10,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.dummy import DummyClassifier
 from xgboost import XGBClassifier
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline as ImbPipeline
@@ -49,8 +48,7 @@ models = {
         subsample=0.9, colsample_bytree=0.9, random_state=42,
         n_jobs=-1, objective="binary:logistic", eval_metric="logloss"
     ),
-    "LDA": LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto"),
-    "Dummy": DummyClassifier(strategy="most_frequent", random_state=42)
+    "LDA": LinearDiscriminantAnalysis(solver="lsqr", shrinkage="auto")
 }
 
 #train-test split
@@ -101,7 +99,16 @@ print("Precision:", precision_score(y_test, y_pred))
 print("ROC AUC  :", roc_auc_score(y_test, y_pred))
 
 
+best_model.fit(X, y)
 
+# Sauvegarde du modèle
+models_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
+os.makedirs(models_dir, exist_ok=True)
+joblib.dump(best_model, os.path.join(models_dir, "best_model.pkl"))
+
+#### Visualisations ####
+
+# Matrice de confusion
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(5,4))
 sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False)
@@ -110,7 +117,7 @@ plt.ylabel("Réel")
 plt.title("Matrice de confusion sur TEST")
 plt.show()
 
-# Comparaison des modèles selon plusieurs métriques sur le train set (cross-validation)
+# Comparaison des modèles selon plusieurs métriques 
 metrics = ["accuracy", "precision", "recall", "f1", "roc_auc"]
 metrics_results = {}
 
@@ -122,7 +129,6 @@ for name, model in models.items():
     ])
     scores = {}
     for metric in metrics:
-        # roc_auc requires binary labels, skip for Dummy if only one class predicted
         if metric == "roc_auc":
             try:
                 score = cross_val_score(clf, X_train, y_train, cv=cv, scoring=metric)
@@ -132,12 +138,9 @@ for name, model in models.items():
             score = cross_val_score(clf, X_train, y_train, cv=cv, scoring=metric)
         scores[metric] = np.mean(score)
     metrics_results[name] = scores
-
 metrics_df = pd.DataFrame(metrics_results).T
-print("\nComparaison des modèles (cross-validation sur train):")
-print(metrics_df.sort_values("f1", ascending=False))
 
-# Affichage graphique à barres avec légende pour chaque métrique
+# Comparaison des modèles selon plusieurs métriques (graphique)
 metrics_df_plot = metrics_df.sort_values("f1", ascending=False)
 ax = metrics_df_plot.plot(kind="bar", figsize=(10,6))
 plt.ylabel("Score (CV moyenne)")
@@ -149,20 +152,19 @@ plt.tight_layout()
 plt.show()
 
 
-
-# Comparaison des modèles sur le F1 score (cross-validation)
+# Affichage d'un graphique en barre pour comparer les modèles selon le F1 score 
 f1_scores = results_df["CV F1 mean"].sort_values(ascending=False)
-print("\nComparaison des modèles sur le F1 score (cross-validation) :")
-print(f1_scores)
 
-# Affichage d'un graphique en barre pour comparer les modèles selon le F1 score (cross-validation)
 plt.figure(figsize=(8, 5))
-f1_scores.plot(kind="bar", color="cornflowerblue")
+ax = f1_scores.plot(kind="bar", color="cornflowerblue")
 plt.ylabel("F1 Score (CV moyenne)")
 plt.xlabel("Modèle")
 plt.title("Comparaison des modèles selon le F1 score (cross-validation)")
 plt.ylim(0, 1)
 plt.tight_layout()
+for i, v in enumerate(f1_scores):
+    ax.text(i, v + 0.01, f"{v:.2f}", ha="center", va="bottom", fontsize=10)
+
 plt.show()
 
 # Sélection des modèles proches en F1-score et ROC-AUC
@@ -179,17 +181,3 @@ plt.title("Sélection des modèles proches en F1-score et ROC-AUC")
 plt.grid(True)
 plt.tight_layout()
 plt.show()
-
-
-# -----------------------------
-# 8. Ré-entraînement sur tout le dataset
-# -----------------------------
-best_model.fit(X, y)
-
-# -----------------------------
-# 9. Sauvegarde du pipeline complet
-# -----------------------------
-models_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "models"))
-os.makedirs(models_dir, exist_ok=True)
-joblib.dump(best_model, os.path.join(models_dir, "best_model.pkl"))
-
